@@ -1,0 +1,35 @@
+- name: Create opt directories
+  ansible.builtin.file:
+    path: "/opt/vpn-master"
+    state: directory
+    mode: "0755"
+
+- name: Configure UFW for VPN Host
+  community.general.ufw:
+    rule: allow
+    port: "{{ item.port }}"
+    proto: "{{ item.proto }}"
+  loop:
+    - "{{ vpn_ufw_rules['vpn-panel'] }}"
+    - "{{ vpn_ufw_rules['vpn-tunel'] }}"
+
+- name: Enable UFW
+  community.general.ufw:
+    state: enabled
+
+- name: Copy Docker Compose file for VPN Master
+  ansible.builtin.copy:
+    src: docker-compose.yml
+    dest: /opt/vpn-master/docker-compose.yml
+    mode: "0755"
+
+- name: Create .env file for VPN Master from template
+  ansible.builtin.template:
+    src: .env.j2
+    dest: /opt/vpn-master/.env
+    mode: "0644"
+
+- name: Up VPN Master container with Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: /opt/vpn-master
+    state: present

@@ -1,0 +1,9 @@
+roles:
+  - name: geerlingguy.docker
+    version: "7.8.0"
+  - name: xanmanning.k3s
+
+collections:
+  - name: community.docker
+  - name: community.general
+  - name: ansible.posix

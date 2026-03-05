@@ -1,0 +1,11 @@
+ansible_user: root
+
+domain_name: us-inst2.enderhost.online
+instance_ip: "138.197.94.28"
+ansible_python_interpreter: /usr/bin/python3
+
+# ROLE: VPN-CLIENT
+
+vpn_instance_ip: "10.13.13.12"
+# vpn_client_private_key: ""
+# vpn_client_preshared_key: ""

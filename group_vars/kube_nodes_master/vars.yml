@@ -1,0 +1,21 @@
+kube_master_ufw_rules:
+  - { port: 6443, proto: "tcp" }
+  - { port: 10250, proto: "tcp" }
+  - { port: 61821, proto: "tcp" }
+  - { port: 8472, proto: "udp" }
+
+# ==================================
+# ROLE: VPN-MASTER
+# ==================================
+# vpn_password_hash: ""
+
+
+# ==================================
+# ROLE: KUBE-MASTER
+# ==================================
+
+# ==================================
+# ROLE: TRAEFIK-REVERSE-PROXY
+# ==================================
+# cloudflare_dnqs_api_token: ""
+# acme_email: ""

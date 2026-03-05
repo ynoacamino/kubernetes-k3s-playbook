@@ -1,0 +1,31 @@
+essential_packages:
+  - htop
+  - micro
+  - git
+  - curl
+  - wget
+  - unzip
+  - net-tools
+  - ufw
+  - just
+
+timezone: America/Lima
+
+ufw_rules:
+  - { port: 22, proto: "tcp" }
+  - { port: 80, proto: "tcp" }
+  - { port: 443, proto: "tcp" }
+
+vpn_tunel_interface: kube-net
+
+vpn_ufw_rules:
+  vpn-panel: { port: 61821, proto: "tcp" }
+  vpn-tunel: { port: 61820, proto: "udp" }
+
+vpn_master_ip: ""
+vpn_default_address: "10.13.13.1"
+vpn_client_network: "10.13.13.0/24"
+
+# vpn_server_public_key: ""
+
+# kube_token: ""

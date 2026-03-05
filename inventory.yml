@@ -1,0 +1,13 @@
+kube_nodes:
+  hosts:
+    # us-inst1.enderhost.online: {}
+    # us-inst2.enderhost.online: {}
+
+  children:
+    kube_nodes_master:
+      hosts:
+        # us-inst1.enderhost.online: {}
+
+    kube_nodes_worker:
+      hosts:
+        # us-inst2.enderhost.online: {}

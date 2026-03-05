@@ -1,0 +1,5 @@
+traefik_port: 4443
+traefik_docker_network_name: traefik-net
+
+traefik_ufw_rules:
+  - { port: 4443, proto: "tcp" }

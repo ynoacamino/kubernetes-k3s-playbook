@@ -1,0 +1,42 @@
+- name: Configure UFW traefik rules
+  community.general.ufw:
+    rule: allow
+    port: "{{ item.port }}"
+    proto: "{{ item.proto }}"
+  loop: "{{ traefik_ufw_rules }}"
+
+- name: Enable UFW
+  community.general.ufw:
+    state: enabled
+
+- name: Create Traefik directory
+  ansible.builtin.file:
+    path: "/opt/traefik"
+    state: directory
+    mode: "0755"
+
+- name: Copy Traefik Docker Compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: /opt/traefik/docker-compose.yml
+    mode: "0755"
+  notify: Restart Traefik
+
+- name: Create Traefik .env file from template
+  ansible.builtin.template:
+    src: .env.j2
+    dest: /opt/traefik/.env
+    mode: "0644"
+  notify: Restart Traefik
+
+- name: Create Docker Network for Traefik
+  community.docker.docker_network:
+    name: "{{ traefik_docker_network_name }}"
+
+- name: Start Traefik with Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: /opt/traefik
+    state: present
+  notify:
+    - Wait for DNS propagation
+    - Restart Traefik for certificate generation

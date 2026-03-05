@@ -1,0 +1,16 @@
+services:
+  vpn-kube:
+    image: ghcr.io/wg-easy/wg-easy
+    restart: unless-stopped
+    container_name: vpn-kube
+    healthcheck:
+      disable: true
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    env_file: .env
+    volumes:
+      - ./wireguard:/etc/wireguard
+    ports:
+      - "${WG_PORT}:${WG_PORT}/udp"
+      - "${PORT}:${PORT}/tcp"

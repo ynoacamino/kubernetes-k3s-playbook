@@ -1,0 +1,38 @@
+services:
+  traefik:
+    image: traefik:v3.6
+    container_name: traefik
+    restart: unless-stopped
+
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedByDefault=false"
+
+      - "--entrypoints.websecure.address=:${TRAEFIK_PORT}"
+
+      - "--entrypoints.websecure.transport.respondingTimeouts.readTimeout=3600s"
+      - "--entrypoints.websecure.transport.respondingTimeouts.writeTimeout=3600s"
+      - "--entrypoints.websecure.transport.respondingTimeouts.idleTimeout=3600s"
+
+      - "--certificatesresolvers.dnsresolver.acme.dnschallenge=true"
+      - "--certificatesresolvers.dnsresolver.acme.dnschallenge.provider=cloudflare"
+      - "--certificatesresolvers.dnsresolver.acme.dnschallenge.delaybeforecheck=30"
+      - "--certificatesresolvers.dnsresolver.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.dnsresolver.acme.storage=/acme/acme.json"
+
+    ports:
+      - "${TRAEFIK_PORT}:${TRAEFIK_PORT}"
+
+    environment:
+      - CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./acme:/acme
+
+    networks:
+      - ${TRAEFIK_DOCKER_NETWORK_NAME}
+
+networks:
+  {{ traefik_docker_network_name }}:
+    external: true

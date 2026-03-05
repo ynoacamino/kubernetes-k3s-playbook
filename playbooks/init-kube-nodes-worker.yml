@@ -1,0 +1,25 @@
+- name: Initialize Kube Node Worker VPS
+  hosts: kube_nodes_worker
+  become: true
+
+  vars:
+    k3s_agent:
+      server: "{{ kube_url }}"
+    k3s_control_token: "{{ kube_token }}"
+
+  roles:
+    - role: vpn-client
+    - role: xanmanning.k3s
+
+  tasks:
+    - name: Configure UFW kube worker rules
+      community.general.ufw:
+        rule: allow
+        port: "{{ item.port }}"
+        proto: "{{ item.proto }}"
+        from_ip: "{{ vpn_client_network }}"
+      loop: "{{ kube_worker_ufw_rules }}"
+
+    - name: Enable UFW
+      community.general.ufw:
+        state: enabled

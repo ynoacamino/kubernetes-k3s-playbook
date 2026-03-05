@@ -1,0 +1,30 @@
+- name: Initialize Kube Node Master VPS
+  hosts: kube_nodes_master
+  become: true
+
+  vars:
+    k3s_control_token: "{{ kube_token }}"
+
+  pre_tasks:
+    - name: Set this node as a control node
+      ansible.builtin.set_fact:
+        k3s_control_node: true
+
+  roles:
+    - role: traefik-reverse-proxy
+    - role: vpn-master
+    - role: vpn-client
+    - role: xanmanning.k3s
+
+  tasks:
+    - name: Configure UFW kube master rules
+      community.general.ufw:
+        rule: allow
+        port: "{{ item.port }}"
+        proto: "{{ item.proto }}"
+        from_ip: "{{ vpn_client_network }}"
+      loop: "{{ kube_master_ufw_rules }}"
+
+    - name: Enable UFW
+      community.general.ufw:
+        state: enabled

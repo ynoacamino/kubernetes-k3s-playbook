@@ -1,0 +1,4 @@
+kube_url: "https://{{ vpn_default_address }}:6443"
+
+kube_worker_ufw_rules:
+  - { port: 8472, proto: "udp" }

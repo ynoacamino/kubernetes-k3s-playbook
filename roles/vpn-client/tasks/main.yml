@@ -1,0 +1,30 @@
+- name: Update package list
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Install vpn packages
+  ansible.builtin.apt:
+    name: "{{ vpn_client_packages }}"
+    state: present
+
+- name: Create /etc/wireguard directory
+  ansible.builtin.file:
+    path: /etc/wireguard
+    state: directory
+    mode: "0755"
+
+- name: Create WireGuard config from template
+  ansible.builtin.template:
+    src: kube-net.conf.j2
+    dest: /etc/wireguard/{{ vpn_tunel_interface }}.conf
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Restart WireGuard
+
+- name: Enable and start WireGuard service
+  ansible.builtin.systemd:
+    name: "wg-quick@{{ vpn_tunel_interface }}"
+    enabled: true
+    state: started
+    daemon_reload: true

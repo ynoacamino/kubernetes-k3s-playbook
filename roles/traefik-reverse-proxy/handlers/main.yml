@@ -1,0 +1,14 @@
+- name: Restart Traefik
+  community.docker.docker_compose_v2:
+    project_src: /opt/traefik
+    state: restarted
+
+- name: Wait for DNS propagation
+  ansible.builtin.pause:
+    seconds: 10
+    prompt: "Waiting for DNS to stabilize before restarting Traefik..."
+
+- name: Restart Traefik for certificate generation
+  community.docker.docker_compose_v2:
+    project_src: /opt/traefik
+    state: restarted

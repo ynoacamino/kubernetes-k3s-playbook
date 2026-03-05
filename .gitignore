@@ -1,0 +1,4 @@
+**/.vscode/**
+**/.ansible/**
+.vault_pass
+*.vault_pass

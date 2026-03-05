@@ -1,0 +1,5 @@
+monitoring_ufw_rules:
+  - { port: 9001, proto: "tcp" }
+  - { port: 9001, proto: "udp" }
+  - { port: 9100, proto: "tcp" }
+  - { port: 8080, proto: "tcp" } # cAdvisor

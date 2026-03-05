@@ -1,0 +1,5 @@
+- name: Restart WireGuard
+  ansible.builtin.systemd:
+    name: "wg-quick@{{ vpn_tunel_interface }}"
+    state: restarted
+    daemon_reload: true
