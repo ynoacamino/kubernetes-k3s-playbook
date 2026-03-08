@@ -3,9 +3,14 @@
   become: true
 
   vars:
-    k3s_agent:
-      server: "{{ kube_url }}"
+    k3s_registration_address: "{{ kube_url }}"
     k3s_control_token: "{{ kube_token }}"
+
+  pre_tasks:
+    - name: Set this node as a worker/agent
+      ansible.builtin.set_fact:
+        k3s_control_node: false
+        k3s_build_cluster: false
 
   roles:
     - role: vpn-client
