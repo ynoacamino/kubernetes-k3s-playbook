@@ -1,0 +1,4 @@
+traefik_port: 4443
+traefik_docker_network_name: traefik-net
+
+vpn_panel_domain: vpn.example.com

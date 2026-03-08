@@ -13,4 +13,20 @@ services:
       - ./wireguard:/etc/wireguard
     ports:
       - "${WG_PORT}:${WG_PORT}/udp"
-      - "${PORT}:${PORT}/tcp"
+    networks:
+      - traefik-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-net"
+
+      - "traefik.http.routers.vpn-panel.rule=Host(`${VPN_PANEL_DOMAIN}`)"
+      - "traefik.http.routers.vpn-panel.entrypoints=websecure"
+      - "traefik.http.routers.vpn-panel.tls=true"
+      - "traefik.http.routers.vpn-panel.tls.certresolver=dnsresolver"
+      - "traefik.http.routers.vpn-panel.service=vpn-panel-svc"
+
+      - "traefik.http.services.vpn-panel-svc.loadbalancer.server.port=${PORT}"
+
+networks:
+  traefik-net:
+    external: true
