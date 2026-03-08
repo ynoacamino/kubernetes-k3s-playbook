@@ -22,9 +22,11 @@ vpn_ufw_rules:
   vpn-panel: { port: 61821, proto: "tcp" }
   vpn-tunel: { port: 61820, proto: "udp" }
 
-vpn_master_ip: ""
-vpn_default_address: "10.13.13.1"
+vpn_master_ip: "157.230.210.161"
+vpn_default_address: "10.13.13.x"
 vpn_client_network: "10.13.13.0/24"
+
+kube_master_node_ip: "10.13.13.11"
 
 # vpn_server_public_key: ""
 

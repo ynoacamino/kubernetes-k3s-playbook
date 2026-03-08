@@ -1,7 +1,8 @@
 ansible_user: root
+ansible_ssh_private_key_file: ~/.ssh/id_ed25519
 
-domain_name: us-inst2.enderhost.online
-instance_ip: "138.197.94.28"
+domain_name: nyc1-node-2.ynoacamino.me
+instance_ip: "198.211.102.187"
 ansible_python_interpreter: /usr/bin/python3
 
 # ROLE: VPN-CLIENT
