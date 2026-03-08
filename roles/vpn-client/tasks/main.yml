@@ -28,3 +28,13 @@
     enabled: true
     state: started
     daemon_reload: true
+  register: wireguard_service_result
+  ignore_errors: true
+
+- name: Display warning if WireGuard service failed
+  ansible.builtin.debug:
+    msg: >-
+      WARNING: WireGuard service failed to start. This is normal if the VPN server
+      is not fully configured yet. Please configure the VPN server and manually start
+      the service with 'systemctl start wg-quick@{{ vpn_tunel_interface }}'
+  when: wireguard_service_result is failed
