@@ -1,13 +1,21 @@
 kube_nodes:
   hosts:
-    # us-inst1.enderhost.online: {}
-    # us-inst2.enderhost.online: {}
+    nyc1-node-1.ynoacamino.me: {}
+    nyc1-node-2.ynoacamino.me: {}
+    nyc2-node-1.ynoacamino.me: {}
+    # nyc2-node-2.ynoacamino.me: {}
+    # nyc3-node-1.ynoacamino.me: {}
+    # nyc3-node-2.ynoacamino.me: {}
 
   children:
     kube_nodes_master:
       hosts:
-        # us-inst1.enderhost.online: {}
+        nyc1-node-1.ynoacamino.me: {}
 
     kube_nodes_worker:
       hosts:
-        # us-inst2.enderhost.online: {}
+        nyc1-node-2.ynoacamino.me: {}
+        nyc2-node-1.ynoacamino.me: {}
+        # nyc2-node-2.ynoacamino.me: {}
+        # nyc3-node-1.ynoacamino.me: {}
+        # nyc3-node-2.ynoacamino.me: {}
