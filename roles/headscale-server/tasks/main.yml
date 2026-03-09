@@ -1,0 +1,69 @@
+---
+- name: Configure UFW for Headscale
+  community.general.ufw:
+    rule: allow
+    port: "{{ item.port }}"
+    proto: "{{ item.proto }}"
+  loop: "{{ headscale_ufw_rules }}"
+  when: headscale_ufw_rules is defined
+
+- name: Enable UFW
+  community.general.ufw:
+    state: enabled
+
+- name: Create Headscale directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - "{{ headscale_base_dir }}"
+    - "{{ headscale_data_dir }}"
+    - "{{ headscale_config_dir }}"
+
+- name: Create Headscale configuration file
+  ansible.builtin.template:
+    src: config.yaml.j2
+    dest: "{{ headscale_config_dir }}/config.yaml"
+    mode: "0644"
+  notify: restart headscale
+
+- name: Create Headscale Docker Compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ headscale_base_dir }}/docker-compose.yml"
+    mode: "0644"
+  notify: restart headscale
+
+- name: Ensure Traefik network exists
+  community.docker.docker_network:
+    name: "{{ headscale_traefik_network }}"
+  when: headscale_traefik_enabled
+
+- name: Start Headscale with Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: "{{ headscale_base_dir }}"
+    state: present
+
+- name: Wait for Headscale container to be running
+  community.docker.docker_container_info:
+    name: headscale
+  register: headscale_container
+  until: headscale_container.container.State.Status == "running"
+  retries: 30
+  delay: 2
+  changed_when: false
+
+- name: Wait a few seconds for Headscale to initialize
+  ansible.builtin.pause:
+    seconds: 5
+
+- name: Display Headscale server information
+  ansible.builtin.debug:
+    msg:
+      - "Headscale server is running"
+      - "Server URL: {{ headscale_server_url }}"
+      - "Web UI: {{ headscale_server_url }}/web"
+      - "To create a user: docker exec headscale headscale users create <username>"
+      - "To list users: docker exec headscale headscale users list"
+      - "To create preauth key: docker exec headscale headscale preauthkeys create -u <user-id>"

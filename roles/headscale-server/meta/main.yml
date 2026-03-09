@@ -1,0 +1,29 @@
+---
+# Headscale Server Meta Information
+dependencies:
+  - role: traefik-reverse-proxy
+
+galaxy_info:
+  author: Kubernetes K3s Playbook
+  description: Deploy Headscale server with Docker Compose and Traefik integration
+  company: ""
+  license: MIT
+  min_ansible_version: "2.14"
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+
+  galaxy_tags:
+    - headscale
+    - tailscale
+    - vpn
+    - networking
+    - docker
+    - traefik

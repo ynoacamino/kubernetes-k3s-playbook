@@ -1,0 +1,48 @@
+services:
+  headscale:
+    image: headscale/headscale:{{ headscale_version }}
+    container_name: headscale
+    restart: unless-stopped
+    
+    command: serve
+    
+    volumes:
+      - {{ headscale_config_dir }}:/etc/headscale
+      - {{ headscale_data_dir }}:/var/lib/headscale
+    
+    networks:
+{% if headscale_traefik_enabled %}
+      - {{ headscale_traefik_network }}
+{% else %}
+      - default
+{% endif %}
+    
+{% if not headscale_traefik_enabled %}
+    ports:
+      - "{{ headscale_listen_addr.split(':')[1] }}:8080"
+      - "{{ headscale_grpc_addr.split(':')[1] }}:50443"
+{% endif %}
+    
+{% if headscale_traefik_enabled %}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network={{ headscale_traefik_network }}"
+      
+      # HTTP Router
+      - "traefik.http.routers.headscale.rule=Host(`{{ headscale_traefik_domain }}`)"
+      - "traefik.http.routers.headscale.entrypoints=websecure"
+      - "traefik.http.routers.headscale.tls=true"
+      - "traefik.http.routers.headscale.tls.certresolver={{ headscale_traefik_certresolver }}"
+      - "traefik.http.routers.headscale.service=headscale-svc"
+      
+      # HTTP Service
+      - "traefik.http.services.headscale-svc.loadbalancer.server.port=8080"
+{% endif %}
+
+networks:
+{% if headscale_traefik_enabled %}
+  {{ headscale_traefik_network }}:
+    external: true
+{% else %}
+  default:
+{% endif %}

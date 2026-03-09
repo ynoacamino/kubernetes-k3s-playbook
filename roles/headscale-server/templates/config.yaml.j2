@@ -1,0 +1,96 @@
+---
+# Headscale configuration
+# Documentation: https://headscale.net/stable/ref/configuration/
+
+# Server URL that clients will connect to
+server_url: {{ headscale_server_url }}
+
+# Address to listen on
+listen_addr: {{ headscale_listen_addr }}
+
+# Metrics endpoint
+metrics_listen_addr: {{ headscale_metrics_addr }}
+
+# gRPC API endpoint
+grpc_listen_addr: {{ headscale_grpc_addr }}
+grpc_allow_insecure: {{ headscale_grpc_insecure | lower }}
+
+# Noise protocol configuration
+noise:
+  private_key_path: /var/lib/headscale/noise_private.key
+
+# IP prefix allocation
+prefixes:
+  v4: {{ headscale_ipv4_prefix }}
+  v6: {{ headscale_ipv6_prefix }}
+  allocation: {{ headscale_allocation_strategy }}
+
+# DERP configuration
+derp:
+  server:
+    enabled: false
+  
+  urls:
+    - https://controlplane.tailscale.com/derpmap/default
+  
+  paths: []
+  
+  auto_update_enabled: {{ headscale_derp_auto_update | lower }}
+  update_frequency: {{ headscale_derp_update_frequency }}
+
+# Disable update checks
+disable_check_updates: false
+
+# Ephemeral node timeout
+ephemeral_node_inactivity_timeout: {{ headscale_ephemeral_timeout }}
+
+# Database configuration
+database:
+  type: {{ headscale_db_type }}
+  
+  sqlite:
+    path: {{ headscale_db_path }}
+    write_ahead_log: true
+    wal_autocheckpoint: 1000
+
+# Logging
+log:
+  level: {{ headscale_log_level }}
+  format: {{ headscale_log_format }}
+
+# ACL Policy
+policy:
+  mode: file
+  path: ""
+
+# DNS Configuration
+dns:
+  magic_dns: {{ headscale_magic_dns | lower }}
+  base_domain: {{ headscale_base_domain }}
+  override_local_dns: true
+  
+  nameservers:
+    global:
+{% for ns in headscale_nameservers %}
+      - {{ ns }}
+{% endfor %}
+    
+    split: {}
+  
+  search_domains: []
+  extra_records: []
+
+# Unix socket for CLI
+unix_socket: /var/run/headscale/headscale.sock
+unix_socket_permission: "0770"
+
+# Logtail (disabled by default)
+logtail:
+  enabled: false
+
+# Randomize client port
+randomize_client_port: false
+
+# Taildrop
+taildrop:
+  enabled: true
