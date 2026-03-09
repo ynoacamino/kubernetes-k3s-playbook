@@ -15,19 +15,15 @@ ufw_rules:
   - { port: 22, proto: "tcp" }
   - { port: 80, proto: "tcp" }
   - { port: 443, proto: "tcp" }
+  - { port: 4443, proto: "tcp" }
 
-vpn_tunel_interface: kube-net
+headscale_server_url: "https://headscale-kube.ynoacamino.me:4443"
+headscale_base_domain: "kube.ynoacamino.me"
+headscale_traefik_domain: "headscale-kube.ynoacamino.me"
+headscale_ipv4_prefix: "100.64.0.0/10"
+headscale_ipv6_prefix: "fd7a:115c:a1e0::/48"
 
-vpn_ufw_rules:
-  vpn-panel: { port: 61821, proto: "tcp" }
-  vpn-tunel: { port: 61820, proto: "udp" }
 
-vpn_master_ip: "157.230.210.161"
-vpn_default_address: "10.13.13.x"
-vpn_client_network: "10.13.13.0/24"
+tailscale_args: "--accept-routes --accept-dns=true"
+tailscale_up_skip: false
 
-kube_master_node_ip: "10.13.13.11"
-
-# vpn_server_public_key: ""
-
-# kube_token: ""

@@ -1,4 +1,2 @@
-kube_url: "{{ kube_master_node_ip }}"
-
 kube_worker_ufw_rules:
   - { port: 8472, proto: "udp" }

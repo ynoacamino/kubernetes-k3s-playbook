@@ -3,5 +3,9 @@ kube_master_ufw_rules:
   - { port: 10250, proto: "tcp" }
   - { port: 8472, proto: "udp" }
 
-vpn_panel_domain: vpn-kube.ynoacamino.me
+headscale_traefik_enabled: true
+headscale_traefik_network: "traefik-net"
+headscale_traefik_certresolver: "dnsresolver"
+
+tailscale_advertise_routes: "10.42.0.0/16,10.43.0.0/16"
 
