@@ -2,11 +2,4 @@ ansible_user: root
 ansible_ssh_private_key_file: ~/.ssh/id_ed25519
 
 domain_name: nyc1-node-1.ynoacamino.me
-instance_ip: "157.230.210.161"
 ansible_python_interpreter: /usr/bin/python3
-
-# ROLE: VPN-CLIENT
-
-vpn_instance_ip: "10.13.13.11"
-# vpn_client_private_key: ""
-# vpn_client_preshared_key: ""
