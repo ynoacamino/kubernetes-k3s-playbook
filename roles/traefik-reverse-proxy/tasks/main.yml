@@ -40,3 +40,4 @@
   notify:
     - Wait for DNS propagation
     - Restart Traefik for certificate generation
+    - Start Traefik after certificate cleanup
