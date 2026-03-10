@@ -1,0 +1,52 @@
+---
+- name: Generate Tailscale preauth key for personal device
+  hosts: kube_nodes_master
+  become: true
+
+  vars:
+    headscale_pc_user: "personal"
+    headscale_pc_key_expiration: "90d"
+    headscale_pc_key_reusable: false
+
+  tasks:
+    - name: Get current Headscale users
+      ansible.builtin.command: docker exec headscale headscale users list --output json
+      register: headscale_users
+      changed_when: false
+      failed_when: headscale_users.rc != 0
+
+    - name: Create Headscale user if not exists - {{ headscale_pc_user }}
+      ansible.builtin.command: docker exec headscale headscale users create {{ headscale_pc_user }}
+      when: headscale_pc_user not in (headscale_users.stdout | from_json | map(attribute='name') | list)
+      changed_when: true
+
+    - name: Get updated Headscale users
+      ansible.builtin.command: docker exec headscale headscale users list --output json
+      register: headscale_users_updated
+      changed_when: false
+
+    - name: Extract user ID for '{{ headscale_pc_user }}'
+      ansible.builtin.set_fact:
+        pc_user_id: "{{ (headscale_users_updated.stdout | from_json | selectattr('name', 'equalto', headscale_pc_user) | first).id }}"
+
+    - name: Generate preauth key for '{{ headscale_pc_user }}'
+      ansible.builtin.command: >
+        docker exec headscale headscale preauthkeys create
+        --user {{ pc_user_id }}
+        --expiration {{ headscale_pc_key_expiration }}
+        {% if headscale_pc_key_reusable %}--reusable{% endif %}
+        --output json
+      register: pc_preauth_key_result
+      changed_when: true
+
+    - name: Extract generated key
+      ansible.builtin.set_fact:
+        pc_preauth_key: "{{ (pc_preauth_key_result.stdout | from_json).key }}"
+
+    - name: Show preauth key and connection instructions
+      ansible.builtin.debug:
+        msg:
+          - "============================================"
+          - "  Key: {{ pc_preauth_key }}"
+          - "  tailscale up --login-server={{ headscale_server_url }} --authkey={{ pc_preauth_key }} --accept-routes --accept-dns=true"
+          - "============================================"
