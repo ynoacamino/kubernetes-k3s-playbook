@@ -1,2 +1,3 @@
 kube_worker_ufw_rules:
-  - { port: 8472, proto: "udp" }
+  - { port: 10250, proto: "tcp", from_ip: "{{ headscale_ipv4_prefix }}" }
+  - { port: 8472, proto: "udp", from_ip: "{{ headscale_ipv4_prefix }}" }

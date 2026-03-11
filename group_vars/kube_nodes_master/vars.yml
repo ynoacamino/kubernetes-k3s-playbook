@@ -1,7 +1,7 @@
 kube_master_ufw_rules:
-  - { port: 6443, proto: "tcp" }
-  - { port: 10250, proto: "tcp" }
-  - { port: 8472, proto: "udp" }
+  - { port: 6443, proto: "tcp", from_ip: "{{ headscale_ipv4_prefix }}" }
+  - { port: 10250, proto: "tcp", from_ip: "{{ headscale_ipv4_prefix }}" }
+  - { port: 8472, proto: "udp", from_ip: "{{ headscale_ipv4_prefix }}" }
 
 headscale_traefik_enabled: true
 headscale_traefik_network: "traefik-net"
