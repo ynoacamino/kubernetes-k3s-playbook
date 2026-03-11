@@ -6,14 +6,7 @@
   vars:
     k3s_become: true
     k3s_build_cluster: true
-    # k3s_control_token: "{{ kube_token }}"  # Commented: Let k3s role auto-manage token
     k3s_registration_address: "{{ groups['kube_nodes_master'][0].split('.')[0] }}.{{ headscale_base_domain }}"
-    k3s_server:
-      write-kubeconfig-mode: '0644'
-      cluster-cidr: '10.42.0.0/16'
-      service-cidr: '10.43.0.0/16'
-      tls-san:
-        - "{{ groups['kube_nodes_master'][0].split('.')[0] }}.{{ headscale_base_domain }}"
 
   pre_tasks:
     # ========================================
@@ -108,6 +101,53 @@
           {% if k3s_control_node | default(false) %}--advertise-routes={{ tailscale_advertise_routes }}{% else %}--accept-routes{% endif %}
           --accept-dns=true
 
+    - name: Get Tailscale IP address
+      ansible.builtin.command: tailscale ip -4
+      register: tailscale_ipv4
+      changed_when: false
+      retries: 6
+      delay: 10
+      until: tailscale_ipv4.rc == 0 and tailscale_ipv4.stdout | trim != ''
+
+    - name: Set Tailscale node IP fact
+      ansible.builtin.set_fact:
+        tailscale_node_ip: "{{ tailscale_ipv4.stdout | trim }}"
+
+    - name: Get public IP via ipify
+      ansible.builtin.uri:
+        url: https://api.ipify.org
+        return_content: true
+      register: ipify_public_ip
+      changed_when: false
+
+    - name: Set public node IP fact
+      ansible.builtin.set_fact:
+        node_public_ip: "{{ ipify_public_ip.content | trim }}"
+
+    # ========================================
+    # Set K3s vars with Tailscale node IP
+    # ========================================
+    - name: Set K3s server vars with Tailscale node IP (master)
+      ansible.builtin.set_fact:
+        k3s_server:
+          write-kubeconfig-mode: '0644'
+          cluster-cidr: '10.42.0.0/16'
+          service-cidr: '10.43.0.0/16'
+          tls-san:
+            - "{{ groups['kube_nodes_master'][0].split('.')[0] }}.{{ headscale_base_domain }}"
+          node-ip: "{{ tailscale_node_ip }}"
+          node-external-ip: "{{ node_public_ip }}"
+          flannel-iface: "tailscale0"
+      when: k3s_control_node | default(false)
+
+    - name: Set K3s agent vars with Tailscale node IP (workers)
+      ansible.builtin.set_fact:
+        k3s_agent:
+          node-ip: "{{ tailscale_node_ip }}"
+          node-external-ip: "{{ node_public_ip }}"
+          flannel-iface: "tailscale0"
+      when: not (k3s_control_node | default(false))
+
   tasks:
     # ========================================
     # Deploy K3s
@@ -120,11 +160,6 @@
     # ========================================
     # Post-Deployment Configuration
     # ========================================
-    - name: Get Tailscale IP address
-      ansible.builtin.command: tailscale ip -4
-      register: tailscale_ipv4
-      changed_when: false
-
     - name: Configure UFW for K3s on master
       community.general.ufw:
         rule: allow
@@ -146,3 +181,32 @@
     - name: Enable UFW
       community.general.ufw:
         state: enabled
+
+    # ========================================
+    # Force svclb-traefik pods to pick up node-external-ip
+    # ========================================
+    - name: Get svclb-traefik pod names
+      ansible.builtin.command: >
+        kubectl get pods -n kube-system
+        -l svccontroller.k3s.cattle.io/svcname=traefik
+        -o jsonpath='{.items[*].metadata.name}'
+      register: svclb_pods
+      changed_when: false
+      when: k3s_control_node | default(false)
+
+    - name: Delete svclb-traefik pods so they pick up node-external-ip
+      ansible.builtin.command: >
+        kubectl delete pods -n kube-system
+        -l svccontroller.k3s.cattle.io/svcname=traefik
+      changed_when: svclb_pods.stdout | trim != ''
+      when:
+        - k3s_control_node | default(false)
+        - svclb_pods.stdout | trim != ''
+
+    - name: Wait for svclb-traefik pods to be ready again
+      ansible.builtin.command: >
+        kubectl wait pods -n kube-system
+        -l svccontroller.k3s.cattle.io/svcname=traefik
+        --for=condition=Ready --timeout=120s
+      changed_when: false
+      when: k3s_control_node | default(false)
