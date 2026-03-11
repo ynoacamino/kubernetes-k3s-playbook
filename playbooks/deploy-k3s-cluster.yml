@@ -138,6 +138,8 @@
           node-ip: "{{ tailscale_node_ip }}"
           node-external-ip: "{{ node_public_ip }}"
           flannel-iface: "tailscale0"
+          advertise-address: "{{ tailscale_node_ip }}"
+          kubelet-preferred-address-types: InternalIP,Hostname,ExternalIP
       when: k3s_control_node | default(false)
 
     - name: Set K3s agent vars with Tailscale node IP (workers)
