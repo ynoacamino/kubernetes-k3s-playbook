@@ -1,0 +1,21 @@
+---
+galaxy_info:
+  author: ynoacamino
+  description: Centralized UFW firewall configuration for K3s cluster nodes
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+  galaxy_tags:
+    - firewall
+    - ufw
+    - security
+    - k3s
+    - kubernetes

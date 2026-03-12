@@ -1,0 +1,38 @@
+---
+# =============================================================================
+# Get Tailscale Network Information
+# =============================================================================
+
+- name: Get Tailscale IPv4 address
+  ansible.builtin.command: tailscale ip -4
+  register: tailscale_ipv4
+  changed_when: false
+  retries: "{{ tailscale_ip_retries }}"
+  delay: "{{ tailscale_ip_delay }}"
+  until: tailscale_ipv4.rc == 0 and tailscale_ipv4.stdout | trim != ''
+
+- name: Set Tailscale node IP fact
+  ansible.builtin.set_fact:
+    tailscale_node_ip: "{{ tailscale_ipv4.stdout | trim }}"
+
+- name: Get public IP via ipify
+  ansible.builtin.uri:
+    url: https://api.ipify.org
+    return_content: true
+    timeout: 10
+  register: ipify_public_ip
+  changed_when: false
+  retries: 3
+  delay: 5
+  until: ipify_public_ip is succeeded
+  ignore_errors: true
+
+- name: Set public node IP fact
+  ansible.builtin.set_fact:
+    node_public_ip: "{{ ipify_public_ip.content | trim if ipify_public_ip is succeeded else ansible_default_ipv4.address }}"
+
+- name: Display network information
+  ansible.builtin.debug:
+    msg:
+      - "Tailscale IP: {{ tailscale_node_ip }}"
+      - "Public IP: {{ node_public_ip }}"

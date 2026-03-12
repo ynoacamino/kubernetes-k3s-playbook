@@ -1,0 +1,26 @@
+---
+dependencies:
+  # Deploy headscale server before client (master only)
+  - role: headscale-server
+    when: k3s_control_node | default(false)
+
+galaxy_info:
+  author: ynoacamino
+  description: Headscale client role for K3s cluster nodes
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+  galaxy_tags:
+    - headscale
+    - tailscale
+    - vpn
+    - k3s
+    - kubernetes

@@ -20,14 +20,14 @@
     src: docker-compose.yml.j2
     dest: /opt/traefik/docker-compose.yml
     mode: "0755"
-  notify: Restart Traefik
+  notify: Restart traefik
 
 - name: Create Traefik .env file from template
   ansible.builtin.template:
     src: .env.j2
     dest: /opt/traefik/.env
     mode: "0644"
-  notify: Restart Traefik
+  notify: Restart traefik
 
 - name: Create Docker Network for Traefik
   community.docker.docker_network:
@@ -38,6 +38,6 @@
     project_src: /opt/traefik
     state: present
   notify:
-    - Wait for DNS propagation
-    - Restart Traefik for certificate generation
-    - Start Traefik after certificate cleanup
+    - Wait for dns propagation
+    - Restart traefik for certificate generation
+    - Start traefik after certificate cleanup

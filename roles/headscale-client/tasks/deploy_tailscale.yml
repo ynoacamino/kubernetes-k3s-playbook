@@ -1,0 +1,19 @@
+---
+# =============================================================================
+# Deploy Tailscale Client on All Nodes
+# =============================================================================
+
+- name: Get tailscale auth key from master
+  ansible.builtin.set_fact:
+    tailscale_auth_key: "{{ hostvars[groups['kube_nodes_master'][0]].generated_tailscale_key | default('') }}"
+  when: not (k3s_control_node | default(false))
+
+- name: Deploy Tailscale client
+  ansible.builtin.include_role:
+    name: artis3n.tailscale.machine
+  vars:
+    tailscale_authkey: "{{ tailscale_auth_key if not (k3s_control_node | default(false)) else generated_tailscale_key }}"
+    tailscale_args: >-
+      --login-server={{ headscale_server_url }}
+      {% if k3s_control_node | default(false) %}--advertise-routes={{ tailscale_advertise_routes }}{% else %}--accept-routes{% endif %}
+      --accept-dns=true

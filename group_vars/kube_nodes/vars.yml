@@ -1,3 +1,16 @@
+# =============================================================================
+# Ansible Connection Settings
+# =============================================================================
+ansible_user: root
+ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+ansible_python_interpreter: /usr/bin/python3
+
+# Domain name for each node (derived from inventory hostname)
+domain_name: "{{ inventory_hostname }}"
+
+# =============================================================================
+# System Configuration
+# =============================================================================
 essential_packages:
   - htop
   - micro
@@ -11,19 +24,29 @@ essential_packages:
 
 timezone: America/Lima
 
+# =============================================================================
+# Firewall (UFW) Base Rules
+# =============================================================================
 ufw_rules:
   - { port: 22, proto: "tcp" }
   - { port: 80, proto: "tcp" }
   - { port: 443, proto: "tcp" }
   - { port: 4443, proto: "tcp" }
 
+# =============================================================================
+# Headscale/Tailscale VPN Configuration
+# =============================================================================
 headscale_server_url: "https://headscale-kube.ynoacamino.me:4443"
 headscale_base_domain: "kube.ynoacamino.me"
 headscale_traefik_domain: "headscale-kube.ynoacamino.me"
 headscale_ipv4_prefix: "100.64.0.0/10"
 headscale_ipv6_prefix: "fd7a:115c:a1e0::/48"
 
-
 tailscale_args: "--accept-routes --accept-dns=true"
 tailscale_up_skip: false
 
+# =============================================================================
+# Traefik/SSL Configuration
+# =============================================================================
+# Email for ACME/Let's Encrypt certificates
+# acme_email: "your-email@example.com"

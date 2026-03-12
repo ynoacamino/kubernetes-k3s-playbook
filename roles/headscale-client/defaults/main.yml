@@ -1,0 +1,23 @@
+---
+# =============================================================================
+# Headscale Client Role - Default Variables
+# =============================================================================
+
+# Headscale user name for the cluster
+headscale_user: "kube-cluster"
+
+# Preauth key expiration time
+headscale_preauth_expiration: "90d"
+
+# Whether the preauth key should be reusable
+headscale_preauth_reusable: true
+
+# Headscale server container name
+headscale_container_name: "headscale"
+
+# Tailscale interface name
+tailscale_interface: "tailscale0"
+
+# Retry settings for Tailscale IP retrieval
+tailscale_ip_retries: 6
+tailscale_ip_delay: 10

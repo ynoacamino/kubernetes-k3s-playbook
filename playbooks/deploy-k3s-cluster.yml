@@ -8,126 +8,14 @@
     k3s_build_cluster: true
     k3s_registration_address: "{{ groups['kube_nodes_master'][0].split('.')[0] }}.{{ headscale_base_domain }}"
 
+  roles:
+    - role: headscale-client
+
   pre_tasks:
     # ========================================
-    # Headscale Server (Master Only)
+    # Set K3s configuration with Tailscale IPs
     # ========================================
-    - name: Deploy Headscale server on master
-      ansible.builtin.include_role:
-        name: headscale-server
-      when: k3s_control_node | default(false)
-
-    - name: Force Traefik handlers to run now
-      ansible.builtin.meta: flush_handlers
-
-    - name: Create Headscale user and generate preauth key
-      when: k3s_control_node | default(false)
-      block:
-        - name: Check if Headscale user exists
-          ansible.builtin.command: docker exec headscale headscale users list --output json
-          register: headscale_users
-          changed_when: false
-          failed_when: false
-
-        - name: Create Headscale user if not exists
-          ansible.builtin.command: docker exec headscale headscale users create kube-cluster
-          when: "'kube-cluster' not in headscale_users.stdout"
-          changed_when: "'kube-cluster' not in headscale_users.stdout"
-
-        - name: Get updated user list
-          ansible.builtin.command: docker exec headscale headscale users list --output json
-          register: headscale_users_updated
-          changed_when: false
-
-        - name: Extract user ID
-          ansible.builtin.set_fact:
-            kube_user_id: "{{ (headscale_users_updated.stdout | from_json | selectattr('name', 'equalto', 'kube-cluster') | first).id }}"
-
-        - name: List existing preauth keys
-          ansible.builtin.command: docker exec headscale headscale preauthkeys list --user {{ kube_user_id }} --output json
-          register: existing_keys
-          changed_when: false
-          failed_when: false
-
-        - name: Filter valid reusable keys
-          ansible.builtin.set_fact:
-            valid_keys: >-
-              {{
-                existing_keys.stdout | from_json
-                | selectattr('Reusable', 'equalto', true)
-                | selectattr('Expiration', 'gt', ansible_date_time.iso8601)
-                | list
-              }}
-          when: existing_keys.rc == 0 and existing_keys.stdout != '[]'
-
-        - name: Extract first valid key if exists
-          ansible.builtin.set_fact:
-            valid_key: "{{ valid_keys[0].Key }}"
-          when:
-            - valid_keys is defined
-            - valid_keys | length > 0
-
-        - name: Generate Headscale preauth key only if needed
-          ansible.builtin.command: >
-            docker exec headscale headscale preauthkeys create
-            --user {{ kube_user_id }}
-            --expiration 90d
-            --reusable
-            --output json
-          register: preauth_key_result
-          changed_when: true
-          when: (valid_key | default('')) == ''
-
-        - name: Extract and cache preauth key
-          ansible.builtin.set_fact:
-            generated_tailscale_key: "{{ (preauth_key_result.stdout | from_json).key if (valid_key | default('')) == '' else valid_key }}"
-            cacheable: true
-
-    # ========================================
-    # Tailscale Client (All Nodes)
-    # ========================================
-    - name: Get tailscale auth key
-      ansible.builtin.set_fact:
-        tailscale_auth_key: "{{ hostvars[groups['kube_nodes_master'][0]].generated_tailscale_key | default('') }}"
-      when: not (k3s_control_node | default(false))
-
-    - name: Deploy Tailscale client
-      ansible.builtin.include_role:
-        name: artis3n.tailscale.machine
-      vars:
-        tailscale_authkey: "{{ tailscale_auth_key if not (k3s_control_node | default(false)) else generated_tailscale_key }}"
-        tailscale_args: >-
-          --login-server={{ headscale_server_url }}
-          {% if k3s_control_node | default(false) %}--advertise-routes={{ tailscale_advertise_routes }}{% else %}--accept-routes{% endif %}
-          --accept-dns=true
-
-    - name: Get Tailscale IP address
-      ansible.builtin.command: tailscale ip -4
-      register: tailscale_ipv4
-      changed_when: false
-      retries: 6
-      delay: 10
-      until: tailscale_ipv4.rc == 0 and tailscale_ipv4.stdout | trim != ''
-
-    - name: Set Tailscale node IP fact
-      ansible.builtin.set_fact:
-        tailscale_node_ip: "{{ tailscale_ipv4.stdout | trim }}"
-
-    - name: Get public IP via ipify
-      ansible.builtin.uri:
-        url: https://api.ipify.org
-        return_content: true
-      register: ipify_public_ip
-      changed_when: false
-
-    - name: Set public node IP fact
-      ansible.builtin.set_fact:
-        node_public_ip: "{{ ipify_public_ip.content | trim }}"
-
-    # ========================================
-    # Set K3s vars with Tailscale node IP
-    # ========================================
-    - name: Set K3s server vars with Tailscale node IP (master)
+    - name: Set K3s server configuration (master)
       ansible.builtin.set_fact:
         k3s_server:
           write-kubeconfig-mode: '0644'
@@ -142,7 +30,7 @@
           kubelet-preferred-address-types: InternalIP,Hostname,ExternalIP
       when: k3s_control_node | default(false)
 
-    - name: Set K3s agent vars with Tailscale node IP (workers)
+    - name: Set K3s agent configuration (workers)
       ansible.builtin.set_fact:
         k3s_agent:
           node-ip: "{{ tailscale_node_ip }}"
@@ -152,38 +40,13 @@
 
   tasks:
     # ========================================
-    # Deploy K3s
+    # Deploy K3s Cluster
     # ========================================
     - name: Deploy K3s cluster
       ansible.builtin.include_role:
         name: xanmanning.k3s
 
   post_tasks:
-    # ========================================
-    # Post-Deployment Configuration
-    # ========================================
-    - name: Configure UFW for K3s on master
-      community.general.ufw:
-        rule: allow
-        port: "{{ item.port }}"
-        proto: "{{ item.proto }}"
-        from_ip: "{{ headscale_ipv4_prefix }}"
-      loop: "{{ kube_master_ufw_rules }}"
-      when: k3s_control_node | default(false)
-
-    - name: Configure UFW for K3s on workers
-      community.general.ufw:
-        rule: allow
-        port: "{{ item.port }}"
-        proto: "{{ item.proto }}"
-        from_ip: "{{ headscale_ipv4_prefix }}"
-      loop: "{{ kube_worker_ufw_rules }}"
-      when: not (k3s_control_node | default(false))
-
-    - name: Enable UFW
-      community.general.ufw:
-        state: enabled
-
     # ========================================
     # Force svclb-traefik pods to pick up node-external-ip
     # ========================================
@@ -194,21 +57,39 @@
         -o jsonpath='{.items[*].metadata.name}'
       register: svclb_pods
       changed_when: false
+      failed_when: false
       when: k3s_control_node | default(false)
 
-    - name: Delete svclb-traefik pods so they pick up node-external-ip
+    - name: Delete svclb-traefik pods to pick up node-external-ip
       ansible.builtin.command: >
         kubectl delete pods -n kube-system
         -l svccontroller.k3s.cattle.io/svcname=traefik
       changed_when: svclb_pods.stdout | trim != ''
       when:
         - k3s_control_node | default(false)
+        - svclb_pods is succeeded
         - svclb_pods.stdout | trim != ''
 
-    - name: Wait for svclb-traefik pods to be ready again
+    - name: Wait for svclb-traefik pods to be ready
       ansible.builtin.command: >
         kubectl wait pods -n kube-system
         -l svccontroller.k3s.cattle.io/svcname=traefik
         --for=condition=Ready --timeout=120s
       changed_when: false
+      when:
+        - k3s_control_node | default(false)
+        - svclb_pods is succeeded
+
+    - name: Verify K3s cluster is healthy
+      ansible.builtin.command: kubectl get nodes
+      register: k3s_nodes
+      changed_when: false
+      failed_when: false
       when: k3s_control_node | default(false)
+
+    - name: Display cluster status
+      ansible.builtin.debug:
+        var: k3s_nodes.stdout_lines
+      when:
+        - k3s_control_node | default(false)
+        - k3s_nodes is succeeded

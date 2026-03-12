@@ -1,0 +1,17 @@
+---
+# =============================================================================
+# Headscale Client - Main Tasks
+# =============================================================================
+
+- name: Generate Headscale preauth key (master only)
+  ansible.builtin.include_tasks: generate_preauth_key.yml
+  when: k3s_control_node | default(false)
+
+- name: Wait for Traefik and Headscale to be ready
+  ansible.builtin.meta: flush_handlers
+
+- name: Deploy Tailscale client on all nodes
+  ansible.builtin.include_tasks: deploy_tailscale.yml
+
+- name: Get Tailscale network information
+  ansible.builtin.include_tasks: get_tailscale_info.yml

@@ -3,9 +3,6 @@ kube_nodes:
     nyc1-node-1.ynoacamino.me: {}
     nyc1-node-2.ynoacamino.me: {}
     nyc2-node-1.ynoacamino.me: {}
-    # nyc2-node-2.ynoacamino.me: {}
-    # nyc3-node-1.ynoacamino.me: {}
-    # nyc3-node-2.ynoacamino.me: {}
 
   children:
     kube_nodes_master:
@@ -18,8 +15,5 @@ kube_nodes:
       hosts:
         nyc1-node-2.ynoacamino.me: {}
         nyc2-node-1.ynoacamino.me: {}
-        # nyc2-node-2.ynoacamino.me: {}
-        # nyc3-node-1.ynoacamino.me: {}
-        # nyc3-node-2.ynoacamino.me: {}
       vars:
         k3s_control_node: false

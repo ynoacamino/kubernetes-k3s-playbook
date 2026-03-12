@@ -19,20 +19,25 @@
   ansible.builtin.file:
     path: "{{ swap_file_path }}"
     mode: "0600"
+    state: file
 
-- name: Make swap file
-  ansible.builtin.command: "mkswap {{ swap_file_path }}"
-  when: swap_file_path not in swap_active.stdout
-  register: mkswap_result
-  changed_when: mkswap_result.rc == 0
+- name: Check if swap file is formatted
+  ansible.builtin.command: "file {{ swap_file_path }}"
+  register: swap_file_type
+  changed_when: false
   failed_when: false
+
+- name: Format swap file if not already formatted
+  ansible.builtin.command: "mkswap {{ swap_file_path }}"
+  when: "'swap file' not in swap_file_type.stdout | lower"
+  register: swap_mkswap_result
+  changed_when: swap_mkswap_result.rc == 0
 
 - name: Enable swap file
   ansible.builtin.command: "swapon {{ swap_file_path }}"
   when: swap_file_path not in swap_active.stdout
-  register: swapon_result
-  changed_when: swapon_result.rc == 0
-  failed_when: false
+  register: swap_swapon_result
+  changed_when: swap_swapon_result.rc == 0
 
 - name: Add swap to fstab
   ansible.builtin.lineinfile:

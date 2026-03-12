@@ -1,0 +1,20 @@
+---
+galaxy_info:
+  author: ynoacamino
+  description: Configures swap file for K3s nodes
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+  galaxy_tags:
+    - system
+    - swap
+    - memory
+    - k3s
