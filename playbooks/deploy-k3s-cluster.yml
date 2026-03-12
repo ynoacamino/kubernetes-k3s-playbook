@@ -80,6 +80,16 @@
         - k3s_control_node | default(false)
         - svclb_pods is succeeded
 
+    - name: Restart K3s service
+      ansible.builtin.systemd:
+        name: k3s
+        state: restarted
+
+    - name: Wait for K3s to be ready
+      ansible.builtin.pause:
+        seconds: 15
+        prompt: "Waiting for K3s to stabilize..."
+
     - name: Verify K3s cluster is healthy
       ansible.builtin.command: kubectl get nodes
       register: k3s_nodes
