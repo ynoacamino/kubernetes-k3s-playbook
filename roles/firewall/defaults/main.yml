@@ -8,11 +8,6 @@
 # Whether to enable UFW
 firewall_enabled: true
 
-# Default policy
-firewall_default_incoming: deny
-firewall_default_outgoing: allow
-firewall_default_routed: deny
-
 # K3s pod and service CIDRs for routing rules
 firewall_k3s_pod_cidr: "10.42.0.0/16"
 firewall_k3s_service_cidr: "10.43.0.0/16"

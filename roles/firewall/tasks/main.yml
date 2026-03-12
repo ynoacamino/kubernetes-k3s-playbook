@@ -6,17 +6,17 @@
 - name: Set default UFW incoming policy
   community.general.ufw:
     direction: incoming
-    policy: "{{ firewall_default_incoming }}"
+    policy: deny
 
 - name: Set default UFW outgoing policy
   community.general.ufw:
     direction: outgoing
-    policy: "{{ firewall_default_outgoing }}"
+    policy: allow
 
 - name: Set default UFW routed policy
   community.general.ufw:
     direction: routed
-    policy: "{{ firewall_default_routed }}"
+    policy: deny
 
 - name: Configure base UFW rules (from group_vars)
   community.general.ufw:
