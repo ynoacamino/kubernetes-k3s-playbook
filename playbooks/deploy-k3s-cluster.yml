@@ -50,35 +50,35 @@
     # ========================================
     # Force svclb-traefik pods to pick up node-external-ip
     # ========================================
-    - name: Get svclb-traefik pod names
-      ansible.builtin.command: >
-        kubectl get pods -n kube-system
-        -l svccontroller.k3s.cattle.io/svcname=traefik
-        -o jsonpath='{.items[*].metadata.name}'
-      register: svclb_pods
-      changed_when: false
-      failed_when: false
-      when: k3s_control_node | default(false)
+    # - name: Get svclb-traefik pod names
+    #   ansible.builtin.command: >
+    #     kubectl get pods -n kube-system
+    #     -l svccontroller.k3s.cattle.io/svcname=traefik
+    #     -o jsonpath='{.items[*].metadata.name}'
+    #   register: svclb_pods
+    #   changed_when: false
+    #   failed_when: false
+    #   when: k3s_control_node | default(false)
 
-    - name: Delete svclb-traefik pods to pick up node-external-ip
-      ansible.builtin.command: >
-        kubectl delete pods -n kube-system
-        -l svccontroller.k3s.cattle.io/svcname=traefik
-      changed_when: svclb_pods.stdout | trim != ''
-      when:
-        - k3s_control_node | default(false)
-        - svclb_pods is succeeded
-        - svclb_pods.stdout | trim != ''
+    # - name: Delete svclb-traefik pods to pick up node-external-ip
+    #   ansible.builtin.command: >
+    #     kubectl delete pods -n kube-system
+    #     -l svccontroller.k3s.cattle.io/svcname=traefik
+    #   changed_when: svclb_pods.stdout | trim != ''
+    #   when:
+    #     - k3s_control_node | default(false)
+    #     - svclb_pods is succeeded
+    #     - svclb_pods.stdout | trim != ''
 
-    - name: Wait for svclb-traefik pods to be ready
-      ansible.builtin.command: >
-        kubectl wait pods -n kube-system
-        -l svccontroller.k3s.cattle.io/svcname=traefik
-        --for=condition=Ready --timeout=120s
-      changed_when: false
-      when:
-        - k3s_control_node | default(false)
-        - svclb_pods is succeeded
+    # - name: Wait for svclb-traefik pods to be ready
+    #   ansible.builtin.command: >
+    #     kubectl wait pods -n kube-system
+    #     -l svccontroller.k3s.cattle.io/svcname=traefik
+    #     --for=condition=Ready --timeout=120s
+    #   changed_when: false
+    #   when:
+    #     - k3s_control_node | default(false)
+    #     - svclb_pods is succeeded
 
     - name: Restart K3s service
       ansible.builtin.systemd:
